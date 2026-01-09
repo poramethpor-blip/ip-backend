@@ -6,7 +6,6 @@ use crate::{application::use_cases::authentication::AuthenticationUseCase, domai
 
 
 
-
 pub async fn login<T>(
     State(authentication_use_case): State<Arc<AuthenticationUseCase<T>>>,
     Json(login_model): Json<LoginModel>,
@@ -15,11 +14,19 @@ where
     T: BrawlerRepository + Send + Sync,
 {
     match authentication_use_case.login(login_model).await {
-        Ok(passport) => (StatusCode::OK, Json(passport.access_token)).into_response(),
-
-        Err(e)=> (StatusCode::INTERNAL_SERVER_ERROR, Json(e.to_string())).into_response(),
+        Ok(passport) => {
+            (StatusCode::OK, Json(passport)).into_response()
+        }
+        Err(e) => {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(e.to_string()),
+            )
+                .into_response()
+        }
     }
 }
+
 
 pub fn routes(db_pool: Arc<PgPoolSquad>) -> Router {
     let repository = BrawlerPostgres::new(db_pool);
